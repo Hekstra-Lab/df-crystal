@@ -1,2 +1,2 @@
 # df-crystal
-Pandas dataframes extended for crystallography computing operations. 
+Pandas dataframes extended for crystallographic computing applications. 
