@@ -16,7 +16,7 @@ def read_cns(self, hklfile):
         name of an hkl file or a file like object
     """
 
-    #This could be made fast/lightweight at the expense of readability later
+    # This could be made fast/lightweight at the expense of readability later
     if isinstance(hklfile, str):
         hklfile = open(hklfile)
     lines = hklfile.readlines()
@@ -49,7 +49,7 @@ def read_cns(self, hklfile):
 
     usecols  = [1, 2, 3, 5]
 
-    #Determine if there is phase information in the file
+    # Determine if there is phase information in the file
     if len(lines[0].split()) == 7:
         colnames.append('PHASE')
         usecols.append(6)
@@ -69,3 +69,18 @@ def read_cns(self, hklfile):
     self._label_centrics()
     return self
 
+def write_cns(self, outfile):
+    """
+    Write contents of crystal object to a CNS file
+
+    Parameters
+    ----------
+    outfile : str or file
+        name of an hkl file or a file like object
+    """
+    if isinstance(outfile, str):
+        outfile = open(outfile, 'w')
+
+    outfile.write(''.join(self.header))
+    for (h,k,l),d in self.iterrows():
+        outfile.write("".format(h, k, l, self.datacol))
