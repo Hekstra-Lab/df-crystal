@@ -5,21 +5,21 @@ import pandas as pd
 import symop
 import crystal
 
-def read(self, hklfile):
+def read(self, cnsfile):
     """
     Initialize attributes and populate the crystal object with data from
-    a cns formatted reflection file
+    a CNS-formatted reflection file
 
     Parameters
     ----------
-    hklfile : str or file
-        name of an hkl file or a file like object
+    cnsfile : str or file
+        name of a CNS-format file or a file object
     """
 
     # This could be made fast/lightweight at the expense of readability later
-    if isinstance(hklfile, str):
-        hklfile = open(hklfile)
-    lines = hklfile.readlines()
+    if isinstance(cnsfile, str):
+        cnsfile = open(cnsfile)
+    lines = cnsfile.readlines()
     self.header  = [i for i in lines if i[:4] != 'INDE']
     declare      = [i for i in self.header if i[:4] == 'DECL'][0]
     lines        = [i for i in lines if i[:4] == 'INDE']
