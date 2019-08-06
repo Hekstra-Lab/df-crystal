@@ -5,7 +5,7 @@ import pandas as pd
 import symop
 import crystal
 
-def read_cns(self, hklfile):
+def read(self, hklfile):
     """
     Initialize attributes and populate the crystal object with data from
     a cns formatted reflection file
@@ -69,7 +69,7 @@ def read_cns(self, hklfile):
     self._label_centrics()
     return self
 
-def write_cns(self, outfile):
+def write(self, outfile):
     """
     Write contents of crystal object to a CNS file
 

@@ -197,7 +197,7 @@ class crystal(pd.DataFrame):
         hklfile : str or file
             name of an hkl file or a file like object
         """
-        return cns.read_cns(self, hklfile)
+        return cns.read(self, hklfile)
 
     def write_cns(self, outfile):
         """
@@ -208,7 +208,7 @@ class crystal(pd.DataFrame):
         outfile : str or file
             name of an hkl file or a file like object
         """
-        return cns.write_cns(self, outfile)
+        return cns.write(self, outfile)
 
     def _label_centrics(self):
         """
