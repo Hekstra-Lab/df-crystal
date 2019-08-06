@@ -187,22 +187,6 @@ class crystal(pd.DataFrame):
     def _constructor_sliced(self):
         return crystalseries
 
-    def write_hkl(self, outfile):
-        """
-        Write contents of crystal object to a CNS file
-
-        Parameters
-        ----------
-        hklfile : str or file
-            name of an hkl file or a file like object
-        """
-        if isinstance(outfile, str):
-            outfile = open('outfile', 'w')
-
-        outfile.write(''.join(self.header))
-        for (h,k,l),d in self.iterrows():
-            out.write("".format(h, k, l, self.datacol))
-
     def read_cns(self, hklfile):
         """
         Initialize attributes and populate the crystal object with data
