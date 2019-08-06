@@ -1,8 +1,9 @@
-import re
 from io import StringIO
+import re
+import numpy as np
 import pandas as pd
-import ..symop
-import ..crystal
+import symop
+import crystal
 
 def read_cns(self, hklfile):
     """
@@ -31,7 +32,7 @@ def read_cns(self, hklfile):
     gamma = float(re.search(r'(?<=gamma=)[^\s]+(?<!\s)', ''.join(self.header)).group())
     self.cell = np.array([a, b, c, alpha, beta, gamma])
     self.A = crystal.orthogonalization(*self.cell).T
-    self.V = crysta.cellvol(*self.cell)
+    self.V = crystal.cellvol(*self.cell)
 
     sg = re.search(r'(?<=sg=)[^\s]+(?<!\s)', ''.join(self.header)).group()
     if sg == "P2(1)":
@@ -63,7 +64,7 @@ def read_cns(self, hklfile):
     for k,v in F.items():
         self[k] = v
 
-    self['D'] = dhkl(F['H'], F['K'], F['L'], *self.cell)
+    self['D'] = crystal.dhkl(F['H'], F['K'], F['L'], *self.cell)
     self.set_index(['H', 'K', 'L'], inplace=True)
     self._label_centrics()
     return self

@@ -1,7 +1,7 @@
 from multiprocessing.pool import Pool
 from multiprocessing import cpu_count
 from io import StringIO
-from .formats import cns
+from formats import cns
 import symop, re
 import numpy as np
 import pandas as pd
