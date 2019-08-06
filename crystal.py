@@ -1,6 +1,7 @@
 from multiprocessing.pool import Pool
 from multiprocessing import cpu_count
 from io import StringIO
+from .formats import cns
 import symop, re
 import numpy as np
 import pandas as pd
@@ -202,6 +203,17 @@ class crystal(pd.DataFrame):
         for (h,k,l),d in self.iterrows():
             out.write("".format(h, k, l, self.datacol))
 
+    def read_cns(self, hklfile):
+        """
+        Initialize attributes and populate the crystal object with data
+        from a cns formatted reflection file
+        
+        Parameters
+        ----------
+        hklfile : str or file
+            name of an hkl file or a file like object
+        """
+        return cns.read_cns(self, hklfile)
 
     def read_hkl(self, hklfile):
         """
