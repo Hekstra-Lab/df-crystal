@@ -83,4 +83,4 @@ def write_cns(self, outfile):
 
     outfile.write(''.join(self.header))
     for (h,k,l),d in self.iterrows():
-        outfile.write("".format(h, k, l, self.datacol))
+        outfile.write(f"INDEx {h:d} {k:d} {l:d} F= {d['F']:.5f} {d['PHASE']:.7f}\n")
