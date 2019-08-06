@@ -199,6 +199,17 @@ class crystal(pd.DataFrame):
         """
         return cns.read_cns(self, hklfile)
 
+    def write_cns(self, outfile):
+        """
+        Write contents of crystal object to a CNS file
+
+        Parameters
+        ----------
+        outfile : str or file
+            name of an hkl file or a file like object
+        """
+        return cns.write_cns(self, outfile)
+
     def _label_centrics(self):
         """
         Add 'CENTRIC' key to self. Label centric reflections as True.
