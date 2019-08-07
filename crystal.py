@@ -362,7 +362,7 @@ class crystal(pd.DataFrame):
         Friedel[['H', 'K', 'L']] = -Friedel[['H', 'K', 'L']]
         for k in Friedel:
             if is_phase_key(k):
-                Friedel[k] = np.rad2deg(np.angle(np.exp(1j*np.pi)*np.exp(1j*np.deg2rad(Friedel[k]))))
+                Friedel[k] = -Friedel[k]
         F = F.append(Friedel).set_index(['H', 'K', 'L'])
         F = F[~F.index.duplicated(keep='first')]
         #self.update(F)
@@ -386,7 +386,7 @@ class crystal(pd.DataFrame):
         Friedel[['H', 'K', 'L']] = -Friedel[['H', 'K', 'L']]
         for k in Friedel:
             if is_phase_key(k):
-                Friedel[k] = np.rad2deg(np.angle(np.exp(1j*np.pi)*np.exp(1j*np.deg2rad(Friedel[k]))))
+                Friedel[k] = -Friedel[k]
         F = F.append(Friedel).set_index(['H', 'K', 'L'])
         F = F[~F.index.duplicated(keep='first')]
         self._coerce_dtypes()
