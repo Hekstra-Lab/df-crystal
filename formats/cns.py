@@ -76,7 +76,7 @@ def write(self, outfile):
     Parameters
     ----------
     outfile : str or file
-        name of an hkl file or a file like object
+        name of a CNS file or a file like object
     """
     if isinstance(outfile, str):
         outfile = open(outfile, 'w')
