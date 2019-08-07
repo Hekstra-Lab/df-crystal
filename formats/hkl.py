@@ -52,6 +52,36 @@ def read(self, hklfile, a=None, b=None, c=None, alpha=None, beta=None,
         sg = re.sub(r'\)', ' ', sg)
         sg = sg[0] + ' ' + sg[1:].strip()
         self.spacegroup = symop.spacegroupnums[sg]
-
-
+        
     return self
+
+def write(self, outfile, sf_key="F", err_key="SigF", phase_key=None,
+          weight_key=None):
+    """
+    Write contents of crystal object to an HKL file
+
+    Parameters
+    ----------
+    outfile : str or file
+        name of an hkl file or file-like object
+    sf_key : str
+        key for structure factor in DataFrame
+    err_key : str
+        key for structure factor error in DataFrame
+    phase_key : str
+        key for phase in DataFrame
+    weight_key : str
+        key for structure factor weights in DataFrame
+    """
+    if isinstance(outfile, str):
+        outfile = open(outfile, 'w')
+
+    for (h,k,l), d in self.iterrows():
+        if phase_key is None and weight_key is None:
+            outfile.write("{h:5d}{k:5d}{l:5d}{d[sf_key]:15.2f}{d[err_key]:15.2f}\n")
+        elif phase_key and weight_key is None:
+            outfile.write("{h:5d}{k:5d}{l:5d}{d[sf_key]:15.2f}{d[err_key]:15.2f}{d[phase_key]:15.7f}\n")
+        else:
+            outfile.write("{h:5d}{k:5d}{l:5d}{d[sf_key]:15.2f}{d[err_key]:15.2f}{d[phase_key]:15.7f}{d[weight_key]:15.7f}\n")
+            
+            
