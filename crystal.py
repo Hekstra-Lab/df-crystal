@@ -238,6 +238,27 @@ class crystal(pd.DataFrame):
             this should be a space group symbol
         """
         return hkl.read(self, hklfile, a, b, c, alpha, beta, gamma, sg)
+
+    def write_hkl(self, outfile, sf_key="F", err_key="SigF",
+                  phase_key=None, weight_key=None):
+        """
+        Write contents of crystal object to an HKL file
+
+        Parameters
+        ----------
+        outfile : str or file
+            name of an hkl file or file-like object
+        sf_key : str
+            key for structure factor in DataFrame
+        err_key : str
+            key for structure factor error in DataFrame
+        phase_key : str
+            key for phase in DataFrame
+        weight_key : str
+            key for structure factor weights in DataFrame
+        """
+        return hkl.write(self, outfile, sf_key, err_key, phase_key,
+                         weight_key)
         
     def _label_centrics(self):
         """

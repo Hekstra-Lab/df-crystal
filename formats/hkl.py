@@ -84,4 +84,4 @@ def write(self, outfile, sf_key="F", err_key="SigF", phase_key=None,
         else:
             outfile.write("{h:5d}{k:5d}{l:5d}{d[sf_key]:15.2f}{d[err_key]:15.2f}{d[phase_key]:15.7f}{d[weight_key]:15.7f}\n")
             
-            
+    return
