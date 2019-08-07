@@ -1,7 +1,7 @@
 from multiprocessing.pool import Pool
 from multiprocessing import cpu_count
 from io import StringIO
-from formats import cns, hkl
+from formats import cns, hkl, mtz
 import symop, re
 import numpy as np
 import pandas as pd
@@ -259,7 +259,28 @@ class crystal(pd.DataFrame):
         """
         return hkl.write(self, outfile, sf_key, err_key, phase_key,
                          weight_key)
-        
+
+    def write_mtz(self, outfile, sf_key="F", err_key="SigF",
+                  phase_key=None, weight_key=None):
+        """
+        Write contents of crystal object to an MTZ file
+
+        Parameters
+        ----------
+        outfile : str
+            name of an MTZ file to write
+        sf_key : str
+            key for structure factor in DataFrame
+        err_key : str
+            key for structure factor error in DataFrame
+        phase_key : str
+            key for phase in DataFrame
+        weight_key : str
+            key for structure factor weights in DataFrame
+        """
+        return mtz.write(self, outfile, sf_key, err_key, phase_key,
+                         weight_key)
+    
     def _label_centrics(self):
         """
         Add 'CENTRIC' key to self. Label centric reflections as True.
