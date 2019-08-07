@@ -143,7 +143,7 @@ def dhkl(h, k, l, a, b, c, alpha, beta, gamma):
     d = 1./np.sqrt(np.sum(np.square(np.matmul(Oinv.T, hkl)), 0))
     return d
 
-class crystalseries(pd.Series):
+class CrystalSeries(pd.Series):
     spacegroup = None
     cell = None
     A = None
@@ -154,7 +154,7 @@ class crystalseries(pd.Series):
     def _constructor(self):
         return crystalseries
 
-class crystal(pd.DataFrame):
+class Crystal(pd.DataFrame):
     """
     Representation of a crystal
 
@@ -181,11 +181,11 @@ class crystal(pd.DataFrame):
 
     @property
     def _constructor(self):
-        return crystal
+        return Crystal
 
     @property
     def _constructor_sliced(self):
-        return crystalseries
+        return CrystalSeries
 
     def read_cns(self, cnsfile):
         """
@@ -317,7 +317,7 @@ class crystal(pd.DataFrame):
             else:
                 labels = np.concatenate((labels, op(hkl.T)[None, :, :]), 0)
         labels = np.sort(labels, 0)[-1].astype(int)
-        merged = crystal(index=self.index)
+        merged = Crystal(index=self.index)
         print(labels.shape)
         merged['MERGEDH'], merged['MERGEDK'], merged['MERGEDL'] = labels
         return merged
