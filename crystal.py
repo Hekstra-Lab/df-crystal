@@ -1,7 +1,7 @@
 from multiprocessing.pool import Pool
 from multiprocessing import cpu_count
 from io import StringIO
-from formats import cns
+from formats import cns, hkl
 import symop, re
 import numpy as np
 import pandas as pd
@@ -187,17 +187,17 @@ class crystal(pd.DataFrame):
     def _constructor_sliced(self):
         return crystalseries
 
-    def read_cns(self, hklfile):
+    def read_cns(self, cnsfile):
         """
         Initialize attributes and populate the crystal object with data
         from a cns formatted reflection file
         
         Parameters
         ----------
-        hklfile : str or file
+        cnsfile : str or file
             name of an hkl file or a file like object
         """
-        return cns.read(self, hklfile)
+        return cns.read(self, cnsfile)
 
     def write_cns(self, outfile):
         """
@@ -210,6 +210,35 @@ class crystal(pd.DataFrame):
         """
         return cns.write(self, outfile)
 
+    def read_hkl(self, hklfile, a=None, b=None, c=None, alpha=None,
+                 beta=None, gamma=None, sg=None):
+        """
+        Initialize attributes and populate the crystal object with data 
+        from a HKL file of reflections. This is the output format used 
+        by Precognition when processing Laue diffraction data.
+
+        Parameters
+        ----------
+        hklfile : str or file
+            name of an hkl file or a file object
+        a : float
+            edge length, a, of the unit cell
+        b : float
+            edge length, b, of the unit cell
+        c : float
+            edge length, c, of the unit cell
+        alpha : float
+            interaxial angle, alpha, of the unit cell
+        beta : float
+            interaxial angle, beta, of the unit cell
+        gamma : float
+            interaxial angle, gamma, of the unit cell
+        sg : str or int
+            If int, this should specify the space group number. If str, 
+            this should be a space group symbol
+        """
+        return hkl.read(self, hklfile, a, b, c, alpha, beta, gamma, sg)
+        
     def _label_centrics(self):
         """
         Add 'CENTRIC' key to self. Label centric reflections as True.
