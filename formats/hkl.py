@@ -80,11 +80,11 @@ def write(self, outfile, sf_key="F", err_key="SigF", phase_key=None,
         
     for (h,k,l), d in self.iterrows():
         if phase_key is None and weight_key is None:
-            outfile.write("{h:5d}{k:5d}{l:5d}{d[sf_key]:15.2f}{d[err_key]:15.2f}\n")
+            outfile.write(f"{h:5d}{k:5d}{l:5d}{d[sf_key]:15.3f}{d[err_key]:15.3f}\n")
         elif phase_key and weight_key is None:
-            outfile.write("{h:5d}{k:5d}{l:5d}{d[sf_key]:15.2f}{d[err_key]:15.2f}{d[phase_key]:15.7f}\n")
+            outfile.write(f"{h:5d}{k:5d}{l:5d}{d[sf_key]:15.3f}{d[err_key]:15.3f}{d[phase_key]:15.7f}\n")
         else:
-            outfile.write("{h:5d}{k:5d}{l:5d}{d[sf_key]:15.2f}{d[err_key]:15.2f}{d[phase_key]:15.7f}{d[weight_key]:15.7f}\n")
+            outfile.write(f"{h:5d}{k:5d}{l:5d}{d[sf_key]:15.3f}{d[err_key]:15.3f}{d[phase_key]:15.7f}{d[weight_key]:15.7f}\n")
 
     # If this function opened a file, close it
     if closeme:
