@@ -73,9 +73,11 @@ def write(self, outfile, sf_key="F", err_key="SigF", phase_key=None,
     weight_key : str
         key for structure factor weights in DataFrame
     """
+    closeme = False
     if isinstance(outfile, str):
         outfile = open(outfile, 'w')
-
+        closeme = True
+        
     for (h,k,l), d in self.iterrows():
         if phase_key is None and weight_key is None:
             outfile.write("{h:5d}{k:5d}{l:5d}{d[sf_key]:15.2f}{d[err_key]:15.2f}\n")
@@ -83,5 +85,9 @@ def write(self, outfile, sf_key="F", err_key="SigF", phase_key=None,
             outfile.write("{h:5d}{k:5d}{l:5d}{d[sf_key]:15.2f}{d[err_key]:15.2f}{d[phase_key]:15.7f}\n")
         else:
             outfile.write("{h:5d}{k:5d}{l:5d}{d[sf_key]:15.2f}{d[err_key]:15.2f}{d[phase_key]:15.7f}{d[weight_key]:15.7f}\n")
+
+    # If this function opened a file, close it
+    if closeme:
+        outfile.close()
             
     return

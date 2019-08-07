@@ -78,9 +78,17 @@ def write(self, outfile):
     outfile : str or file
         name of a CNS file or a file like object
     """
+    closeme = False
     if isinstance(outfile, str):
         outfile = open(outfile, 'w')
-
+        closeme = True
+        
     outfile.write(''.join(self.header))
     for (h,k,l),d in self.iterrows():
         outfile.write(f"INDEx {h:d} {k:d} {l:d} F= {d['F']:.5f} {d['PHASE']:.7f}\n")
+
+    # If this function opened a file, close it
+    if closeme:
+        outfile.close()
+
+    return
