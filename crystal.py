@@ -152,7 +152,7 @@ class CrystalSeries(pd.Series):
 
     @property
     def _constructor(self):
-        return crystalseries
+        return CrystalSeries
 
 class Crystal(pd.DataFrame):
     """
