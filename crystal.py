@@ -305,7 +305,7 @@ class Crystal(pd.DataFrame):
         hkl = np.vstack(self.index)
         centric = np.zeros(len(hkl), dtype=bool)
         for key,op in symop.symops[self.spacegroup].items():
-            centric = np.all(np.isclose(op(hkl.T), -hkl.T), 0) | centric
+            centric = np.all(np.isclose(op(hkl.T), -hkl.T, 0.1, 0.1), 0) | centric
         return self[~centric]
 
     def hkl_to_reciprocal_asu(self, hkl):
@@ -354,41 +354,48 @@ class Crystal(pd.DataFrame):
         return self
 
     def unmerge_anomalous(self):
-        F = self.reset_index()
-        F['MERGEDH'] = F['H']
-        F['MERGEDK'] = F['K']
-        F['MERGEDL'] = F['L']
-        Friedel = F.copy()
-        Friedel[['H', 'K', 'L']] = -Friedel[['H', 'K', 'L']]
-        for k in Friedel:
+        self['MERGEDH'] = self['MERGEDK'] = self['MERGEDL'] = 0
+        self.loc[:, ['MERGEDH', 'MERGEDK', 'MERGEDL']] = np.vstack(self.index.values)
+        Fplus = self.copy()
+        Fminus = self.copy().reset_index()
+        Fminus[['H', 'K', 'L']] = -1*Fminus[['H', 'K', 'L']]
+        for k in Fminus:
             if is_phase_key(k):
-                Friedel[k] = -Friedel[k]
-        F = F.append(Friedel).set_index(['H', 'K', 'L'])
-        F = F[~F.index.duplicated(keep='first')]
-        #self.update(F)
+                Fminus.loc[~Fminus.CENTRIC,k] = -Fminus.loc[~Fminus.CENTRIC, 'PHASE']
+        Fminus = Fminus.set_index(['H', 'K', 'L'])
+#TODO: decide whether these labels are worth keeping around
+        #Fminus['Friedel'] = True
+        #Fplus['Friedel'] = False
+        F = Fplus.append(Fminus.loc[Fminus.index.difference(Fplus.index)])
         self._coerce_dtypes()
         self.__init__(F)
         return self
 
     def unmerge(self):
-        F = self.reset_index()
-        F['MERGEDH'] = F['H']
-        F['MERGEDK'] = F['K']
-        F['MERGEDL'] = F['L']
+        self['MERGEDH'] = self['MERGEDK'] = self['MERGEDL'] = 0
+        self.loc[:, ['MERGEDH', 'MERGEDK', 'MERGEDL']] = np.vstack(self.index.values)
+        self.unmerge_anomalous()
+        F = Crystal()
         for k,op in symop.symops[self.spacegroup].items():
-            f = self.reset_index().copy()
-            f['MERGEDH'] = f['H']
-            f['MERGEDK'] = f['K']
-            f['MERGEDL'] = f['L']
+            f = self.copy()
+#TODO: Decide whether these labels are worth keeping around
+            #f['op'] = k
+            #hkl = np.vstack(f.index.values)
+            #centric = np.all(np.isclose(op(hkl.T), -hkl.T), 0)
+            #f = f[~centric]
+            f = f.reset_index()
             f[['H', 'K', 'L']] = np.array(op(f[['H', 'K', 'L']].T).T, int)
-            F = F.append(f)
-        Friedel = F.copy()
-        Friedel[['H', 'K', 'L']] = -Friedel[['H', 'K', 'L']]
-        for k in Friedel:
-            if is_phase_key(k):
-                Friedel[k] = -Friedel[k]
-        F = F.append(Friedel).set_index(['H', 'K', 'L'])
-        F = F[~F.index.duplicated(keep='first')]
+            for k in f:
+                if is_phase_key(k):
+                    phase = np.deg2rad(f[k])
+                    phase += -2.*np.pi*np.matmul(np.array(f.reset_index()[['H', 'K', 'L']], dtype=float), op.trans)
+                    phase = np.angle(np.exp(1j*phase))
+                    f[k] = np.rad2deg(phase)
+            f = f.set_index(['H', 'K', 'L'])
+            F = F.append(f.loc[f.index.difference(F.index)])
+
+        hkl = np.vstack(F.index.values)
+        F = F[(hkl[:,2] >= 0)& ~((hkl[:,0] <= 0) & (hkl[:,2] == 0))] # ~(H <= 0 & L==0)
         self._coerce_dtypes()
         self.__init__(F)
         return self
@@ -501,6 +508,48 @@ class Crystal(pd.DataFrame):
         F = p.map(_phihelper, iterable)
         p.terminate()
         return pd.concat(F)
+
+    def plot_reciprocal_coverage_3d(self):
+        from matplotlib import pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+        limits = np.max(np.abs(np.vstack(self.index.values)), 0) 
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        h,k,l = np.vstack(self.index.values)[np.random.choice(len(self), 1000)].T
+
+        ax.scatter(h, k, l)
+        ax.set_xlim([-limits[0], limits[0]])
+        ax.set_ylim([-limits[1], limits[1]])
+        ax.set_zlim([-limits[2], limits[2]])
+        plt.show()
+
+    def plot_reciprocal_coverage(self, title='', bins=100):
+        from matplotlib import pyplot as plt
+        limits = np.max(np.abs(np.vstack(self.index.values)), 0) 
+        f, ((ax1, ax2), (ax3, ax4))  = plt.subplots(2,2)
+        ax1.hist2d(self.reset_index()['H'], self.reset_index()['K'], bins)
+        ax1.set_xlabel('H')
+        ax1.set_ylabel('K')
+        ax1.set_xlim([-limits[0], limits[0]])
+        ax1.set_ylim([-limits[1], limits[1]])
+        ax1.set_facecolor(plt.get_cmap()(0.))
+
+        ax2.hist2d(self.reset_index()['L'], self.reset_index()['K'], bins)
+        ax2.set_xlabel('L')
+        ax2.set_ylabel('K')
+        ax2.set_xlim([-limits[2], limits[2]])
+        ax2.set_ylim([-limits[1], limits[1]])
+        ax2.set_facecolor(plt.get_cmap()(0.))
+    
+        ax3.hist2d(self.reset_index()['H'], self.reset_index()['L'], bins)
+        ax3.set_xlabel('H')
+        ax3.set_ylabel('L')
+        ax3.set_xlim([-limits[0], limits[0]])
+        ax3.set_ylim([-limits[2], limits[2]])
+        ax3.set_facecolor(plt.get_cmap()(0.))
+        plt.suptitle(title)
+
+        ax4.axis('off')
 
 def _phihelper(X):
     cryst, kw, i = X
