@@ -3,13 +3,16 @@ import pandas as pd
 import numpy as np
 import crystal
 from subprocess import call
+from os import devnull
 
 
 def test(pdbid, high_resolution=4.):
-    call(f'wget files.rcsb.org/download/{pdbid}.pdb'.split())
-    call(f'phenix.fmodel {pdbid}.pdb high_resolution={high_resolution}'.split())
-    call(f'phenix.reflection_file_converter {pdbid}.pdb.mtz --cns={pdbid}.cns'.split())
-    call(f'phenix.reflection_file_converter {pdbid}.pdb.mtz --expand_to_p1 --cns={pdbid}_p1.cns'.split())
+    null = open(devnull, 'w')
+    call(f'wget files.rcsb.org/download/{pdbid}.pdb'.split(), stdout=null, stderr=null)
+    call(f'phenix.fmodel {pdbid}.pdb high_resolution={high_resolution}'.split(), stdout=null)
+    call(f'phenix.reflection_file_converter {pdbid}.pdb.mtz --cns={pdbid}.cns'.split(), stdout=null)
+    call(f'phenix.reflection_file_converter {pdbid}.pdb.mtz --expand_to_p1 --cns={pdbid}_p1.cns'.split(), stdout=null)
+    null.close()
 
     #P1 control data file
     p1_filename = f"{pdbid}_p1.cns" 
