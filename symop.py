@@ -79,3 +79,10 @@ class spacegroupnums(dict):
 
 symops = symops()
 spacegroupnums = spacegroupnums()
+#These are overrides for CNS files which use a nonstandard nomenclature
+spacegroupnums['C 2221'] = 20
+spacegroupnums['I 222'] = 23
+spacegroupnums['P 32 21'] = 154
+spacegroupnums['P 31 21'] = 152
+
+spacegroupnames = {v: k for k,v in spacegroupnums.items()}
