@@ -16,7 +16,6 @@ def is_phase_key(key):
     else:
         return False
 
-
 def cellvol(a, b, c, alpha, beta, gamma):
     """
     Compute the volume of a crystallographic unit cell from the lattice constants.
@@ -287,10 +286,9 @@ class Crystal(pd.DataFrame):
         """
         self['CENTRIC'] = False
         hkl = np.vstack(self.index)
-        centric = np.zeros(len(hkl), dtype=bool)
         for key,op in symop.symops[self.spacegroup].items():
-            centric = np.all(np.isclose(op(hkl.T), -hkl.T), 0) | centric
-        self['CENTRIC'] = centric
+            #centric = np.all(np.isclose(op(hkl.T), -hkl.T), 0) | centric
+            self['CENTRIC'] = np.all(np.isclose(op.transform_hkl(hkl), -hkl), 1) | self['CENTRIC']
         return self
 
     def remove_centrics(self):
@@ -305,7 +303,7 @@ class Crystal(pd.DataFrame):
         hkl = np.vstack(self.index)
         centric = np.zeros(len(hkl), dtype=bool)
         for key,op in symop.symops[self.spacegroup].items():
-            centric = np.all(np.isclose(op(hkl.T), -hkl.T, 0.1, 0.1), 0) | centric
+            centric = np.all(np.isclose(op.transform_hkl(hkl), -hkl, 0.1, 0.1), 0) | centric
         return self[~centric]
 
     def hkl_to_reciprocal_asu(self, hkl):
@@ -313,9 +311,9 @@ class Crystal(pd.DataFrame):
         labels = None
         for key,op in symop.symops[self.spacegroup].items():
             if labels is None:
-                labels = op(hkl.T)[None, :, :]
+                labels = op.transform_hkl(hkl)[None, :, :]
             else:
-                labels = np.concatenate((labels, op(hkl.T)[None, :, :]), 0)
+                labels = np.concatenate((labels, op.transform_hkl(hkl)[None, :, :]), 0)
         labels = np.sort(labels, 0)[-1].astype(int)
         merged = Crystal(index=self.index)
         print(labels.shape)
@@ -364,8 +362,8 @@ class Crystal(pd.DataFrame):
                 Fminus.loc[~Fminus.CENTRIC,k] = -Fminus.loc[~Fminus.CENTRIC, 'PHASE']
         Fminus = Fminus.set_index(['H', 'K', 'L'])
 #TODO: decide whether these labels are worth keeping around
-        #Fminus['Friedel'] = True
-        #Fplus['Friedel'] = False
+        Fminus['Friedel'] = True
+        Fplus['Friedel'] = False
         F = Fplus.append(Fminus.loc[Fminus.index.difference(Fplus.index)])
         self._coerce_dtypes()
         self.__init__(F)
@@ -374,28 +372,29 @@ class Crystal(pd.DataFrame):
     def unmerge(self):
         self['MERGEDH'] = self['MERGEDK'] = self['MERGEDL'] = 0
         self.loc[:, ['MERGEDH', 'MERGEDK', 'MERGEDL']] = np.vstack(self.index.values)
-        self.unmerge_anomalous()
         F = Crystal()
         for k,op in symop.symops[self.spacegroup].items():
             f = self.copy()
 #TODO: Decide whether these labels are worth keeping around
-            #f['op'] = k
-            #hkl = np.vstack(f.index.values)
-            #centric = np.all(np.isclose(op(hkl.T), -hkl.T), 0)
-            #f = f[~centric]
+            f['op'] = k
+            hkl = np.vstack(f.index.values)
+            centric = np.all(np.isclose(op.transform_hkl(hkl), -hkl), 1)
+            f = f[~centric]
             f = f.reset_index()
-            f[['H', 'K', 'L']] = np.array(op(f[['H', 'K', 'L']].T).T, int)
+            f[['H', 'K', 'L']] = op.transform_hkl(f[['H', 'K', 'L']])
             for k in f:
                 if is_phase_key(k):
                     phase = np.deg2rad(f[k])
                     phase += -2.*np.pi*np.matmul(np.array(f.reset_index()[['H', 'K', 'L']], dtype=float), op.trans)
-                    phase = np.angle(np.exp(1j*phase))
+                    #phase = np.angle(np.exp(1j*phase))
+                    phase = ( phase + np.pi) % (2 * np.pi ) - np.pi
                     f[k] = np.rad2deg(phase)
             f = f.set_index(['H', 'K', 'L'])
             F = F.append(f.loc[f.index.difference(F.index)])
 
+        F.unmerge_anomalous()
         hkl = np.vstack(F.index.values)
-        F = F[(hkl[:,2] >= 0)& ~((hkl[:,0] <= 0) & (hkl[:,2] == 0))] # ~(H <= 0 & L==0)
+        F = F[(hkl[:,2] >= 0)& ~((hkl[:,0] <= 0) & (hkl[:,2] == 0))]
         self._coerce_dtypes()
         self.__init__(F)
         return self
@@ -509,13 +508,16 @@ class Crystal(pd.DataFrame):
         p.terminate()
         return pd.concat(F)
 
-    def plot_reciprocal_coverage_3d(self):
+    def plot_reciprocal_coverage_3d(self, samples=None):
         from matplotlib import pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D
         limits = np.max(np.abs(np.vstack(self.index.values)), 0) 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        h,k,l = np.vstack(self.index.values)[np.random.choice(len(self), 1000)].T
+        if samples is not None:
+            h,k,l = np.vstack(self.index.values)[np.random.choice(len(self), 1000)].T
+        else:
+            h,k,l = np.vstack(self.index.values).T
 
         ax.scatter(h, k, l)
         ax.set_xlim([-limits[0], limits[0]])
@@ -550,6 +552,7 @@ class Crystal(pd.DataFrame):
         plt.suptitle(title)
 
         ax4.axis('off')
+        plt.show()
 
 def _phihelper(X):
     cryst, kw, i = X

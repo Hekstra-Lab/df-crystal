@@ -37,6 +37,7 @@ class op():
                     self.rot_mat[:,i] -= v
                 elif k in t:
                     self.rot_mat[:,i] += v
+        self.rot_mat = self.rot_mat.T #This puts us in accordance with Hovmoller syntax
 
         self.trans = np.zeros(3)
         div = lambda x: float(x[0])/float(x[1])
@@ -44,8 +45,18 @@ class op():
         self.trans[0] = 0. if '/' not in x else div(re.sub(r"[^\/0-9]", "", x).split('/'))
         self.trans[1] = 0. if '/' not in y else div(re.sub(r"[^\/0-9]", "", y).split('/'))
         self.trans[2] = 0. if '/' not in z else div(re.sub(r"[^\/0-9]", "", z).split('/'))
-    def __call__(self, vector):
-        return np.matmul(self.rot_mat, vector)
+
+    def transform_xyz(self, vector):
+        """
+        Transform a 3 vector or nx3 matrix of xyz positions in fractional coordinates.
+        """
+        return np.matmul(self.rot_mat, vector.T).T + self.trans
+
+    def transform_hkl(self, vector):
+        """
+        Transform a 3 vector or nx3 matrix of hkl indices.
+        """
+        return np.matmul(vector, self.rot_mat).astype(int)
 
     def translate(self, vector):
         """
