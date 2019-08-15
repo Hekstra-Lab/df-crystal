@@ -2,6 +2,19 @@ from os.path import dirname,realpath
 import numpy as np
 import re
 
+def order_from_rot_mat(mat):
+    """Determine the order of a rotation. Returns an integer."""
+    det = np.linalg.det(mat)
+    tr = int(np.trace(mat))
+    if det > 0:
+        return [3, 4, 6, 1, 2][tr]
+    elif det < 0:
+        return [6, 2, 2, 6, 4][tr]
+    else:
+#TODO: Should this raise an error? Det should be 1 or -1 in theory
+        return 1
+
+
 class symops(dict):
     def __init__(self, libFN=None):
         if libFN is None:
@@ -45,6 +58,9 @@ class op():
         self.trans[0] = 0. if '/' not in x else div(re.sub(r"[^\/0-9]", "", x).split('/'))
         self.trans[1] = 0. if '/' not in y else div(re.sub(r"[^\/0-9]", "", y).split('/'))
         self.trans[2] = 0. if '/' not in z else div(re.sub(r"[^\/0-9]", "", z).split('/'))
+        self.order = order_from_rot_mat(self.rot_mat)
+        o = np.matmul(np.identity(3) - self.rot_mat, np.identity(3) + self.rot_mat)
+        self.intrinsic_translation = (1/self.order)*np.matmul(np.sum([np.linalg.matrix_power(self.rot_mat, i) for i in range(self.order)],axis=0), self.trans)
 
     def transform_xyz(self, vector):
         """
