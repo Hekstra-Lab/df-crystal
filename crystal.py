@@ -386,6 +386,7 @@ class Crystal(pd.DataFrame):
                 if is_phase_key(k):
                     phase = np.deg2rad(f[k])
                     phase += -2.*np.pi*np.matmul(np.array(f.reset_index()[['H', 'K', 'L']], dtype=float), op.trans)
+                    #phase += -2.*np.pi*np.matmul(np.array(f.reset_index()[['H', 'K', 'L']], dtype=float),  op.intrinsic_translation)
                     #phase = np.angle(np.exp(1j*phase))
                     phase = ( phase + np.pi) % (2 * np.pi ) - np.pi
                     f[k] = np.rad2deg(phase)
