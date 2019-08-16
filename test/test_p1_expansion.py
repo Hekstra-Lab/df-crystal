@@ -36,13 +36,40 @@ pdbs = pd.read_csv(StringIO("""PDBID, space group number, space group name
 6NMT, 97, I 4 2 2
 6NRH, 98, I 41 2 2
 6mbu, 143, P 3           
+6ITG, 144, P 31
+6JD9, 145, P 32
+1D00, 146, R 3
+6NEN, 149, P 3 1 2
+6M9W, 150, P 3 2 1
+6NPT, 151, P 31 1 2
 6b8z, 152, P 31 2 1      
-5w79, 154, P 31 1 2      
+5w79, 154, P 32 2 1      
+2BOP, 155, R 3 2
 6e02, 168, P 6           
 6ovt, 169, P 61          
-6cy6, 177, P 6 2 2       
-6h9p, 180, P 62 2 2      
+6PDI, 170, P 65
+6H64, 171, P 62
+6DWF, 172, P 64
+6GJ6, 173, P 63
+6CY6, 177, P 6 2 2
+6Q58, 178, P 61 2 2
+6GEO, 179, P 65 2 2
+6Q1Y, 180, P 62 2 2
+6I25, 181, P 64 2 2
+6IWV, 182, P 63 2 2
+6D9T, 195, P 2 3
+6QLH, 196, F 2 3
+5YUP, 197, I 2 3
+6ITP, 198, P 21 3
+6S34, 199, I 21 3
+6ECB, 207, P 4 3 2
+6R62, 208, P 42 3 2
+6I9P, 209, F 4 3 2
 4cy9, 210, F 41 3 2
+6D3B, 211, I 4 3 2
+6EDM, 212, P 43 3 2
+6CN8, 213, P 41 3 2
+4I6Y, 214, I 41 3 2
 """
 ), dtype={"PDBID": str, "space group number": int, "space group name": str})
 
@@ -101,19 +128,21 @@ def test(pdbid, high_resolution=4., verbose=False):
         passed = False
         if verbose:
             print("Fail")
-            print(f"{100*len(problematic)/len(test):0.2f} %% incorrect phases")
+            print(f"{100*len(problematic)/len(test):0.2f} % incorrect phases")
             centric = problematic[problematic.CENTRIC]
             acentric = problematic[~problematic.CENTRIC]
-            print(f"{100*problematic.CENTRIC.sum()/len(problematic):0.2f} %% centrics")
+            print(f"{100*problematic.CENTRIC.sum()/len(problematic):0.2f} % centrics")
             print(pd.crosstab(centric.op, centric.Friedel))
             print(f"Plotting phase error for centric reflections... ")
             plt.hexbin(ctrl.loc[centric.index, 'PHASE'], centric.PHASE)
             plt.show()
 
             print(f"Plotting phase error for acentric reflections... ")
+            print(acentric[['op', 'order']].drop_duplicates())
             print(pd.crosstab(acentric.op, acentric.Friedel))
             plt.hexbin(ctrl.loc[acentric.index, 'PHASE'], acentric.PHASE)
             plt.show()
+            test_in.plot_reciprocal_coverage(bins=200)
             acentric.plot_reciprocal_coverage(bins=200)
             acentric.plot_reciprocal_coverage_3d()
 
@@ -124,7 +153,8 @@ if __name__=="__main__":
     from sys import argv
     if len(argv) == 1:
         pdbs['Test'] = pdbs['PDBID'].apply(test)
-        print(pdbs)
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+            print(pdbs)
     else:
         for pdbid in argv[1:]:
             test(pdbid, verbose=True)
