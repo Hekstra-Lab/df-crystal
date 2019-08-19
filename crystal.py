@@ -377,16 +377,19 @@ class Crystal(pd.DataFrame):
             f = self.copy()
 #TODO: Decide whether these labels are worth keeping around
             f['op'] = k
+            f['itrans'] = f'{op.intrinsic_translation[0]:0.2f}, {op.intrinsic_translation[1]:0.2f}, {op.intrinsic_translation[2]:0.2f}'
+            f['order'] = op.order
             hkl = np.vstack(f.index.values)
             centric = np.all(np.isclose(op.transform_hkl(hkl), -hkl), 1)
             f = f[~centric]
             f = f.reset_index()
             f[['H', 'K', 'L']] = op.transform_hkl(f[['H', 'K', 'L']])
+            n=1.
             for k in f:
                 if is_phase_key(k):
                     phase = np.deg2rad(f[k])
-                    phase += -2.*np.pi*np.matmul(np.array(f.reset_index()[['H', 'K', 'L']], dtype=float), op.trans)
-                    #phase += -2.*np.pi*np.matmul(np.array(f.reset_index()[['H', 'K', 'L']], dtype=float),  op.intrinsic_translation)
+                    phase -= 2.*np.pi*np.matmul(np.array(f.reset_index()[['H', 'K', 'L']], dtype=float), (op.order+1)*op.trans)
+                    #phase -= 2.*np.pi*np.matmul(np.array(f[['H', 'K', 'L']], dtype=float),  -op.intrinsic_translation)
                     #phase = np.angle(np.exp(1j*phase))
                     phase = ( phase + np.pi) % (2 * np.pi ) - np.pi
                     f[k] = np.rad2deg(phase)
