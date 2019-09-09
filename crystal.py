@@ -593,7 +593,6 @@ class Crystal(pd.DataFrame):
             phase = ( phase + np.pi) % (2 * np.pi ) - np.pi
             phase = np.rad2deg(phase)
             Fminus[phase_key] = phase
-            from IPython import embed;embed()
 
             DeltaF =  Fplus[sf_key] * np.exp(1j*np.deg2rad(Fplus[phase_key])) - \
                      Fminus[sf_key] * np.exp(1j*np.deg2rad(Fminus[phase_key])) 
