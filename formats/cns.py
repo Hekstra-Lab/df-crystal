@@ -21,7 +21,7 @@ def read(self, cnsfile):
         cnsfile = open(cnsfile)
     lines = cnsfile.readlines()
     self.header  = [i for i in lines if i[:4] != 'INDE']
-    declare      = [i for i in self.header if i[:4] == 'DECL'][0]
+    declares     = [i for i in self.header if i[:4] == 'DECL']
     lines        = [i for i in lines if i[:4] == 'INDE']
 
     a = float(re.search(r'(?<=a=)[^\s]+(?<!\s)', ''.join(self.header)).group())
@@ -44,10 +44,14 @@ def read(self, cnsfile):
         self.spacegroup = symop.spacegroupnums[sg]
 
     colnames = ['H', 'K', 'L']
-    colnames.append(re.search(r"(?<=NAME=)[^\s]*", declare).group())
+    usecols  = [1, 2, 3]
+    for declare in declares:
+        colname = re.search(r"(?<=NAME=)[^\s]*", declare).group()
+        if colname != None:
+            colnames.append(colname)
+            usecols.append(usecols[-1] + 2)
     self.dataname = colnames[-1]
 
-    usecols  = [1, 2, 3, 5]
 
     # Determine if there is phase information in the file
     if len(lines[0].split()) == 7:
