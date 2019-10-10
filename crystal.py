@@ -558,6 +558,50 @@ class Crystal(pd.DataFrame):
         ax4.axis('off')
         plt.show()
 
+    def make_internal_difference_coeffs(self, original_sg, sf_key, phase_key):
+        """
+        Compute all difference map coefficients for a given original space group relative to P1.
+
+        PARAMETERS
+        ----------
+        original_sg : int
+            Original symmetry space group in which to calculate internal difference maps
+        sf_key : str
+            Structure Factor key to use for computing DeltaF
+        phase_key : str
+            Phase key to use for computing DeltaF
+        """
+
+        if self.spacegroup != 1:
+            P1 = self.unmerge()
+        else:
+            P1 = self.copy()
+        #TODO: Figure out what to do if a reindexing op is needed test with for instance P 1 21 1
+        #TODO: check keys are present if not raise some kinda error
+        #TODO: figure out what to do about the "CENTRIC" column but do not implement now
+
+        differences = {}
+        for k,op in symop.symops[original_sg].items():
+            Fplus = P1.copy()[[sf_key, phase_key]]
+            Fminus = P1.copy().unmerge_anomalous()[[sf_key, phase_key]]
+            Fminus.reset_index(inplace=True)
+            Fminus[['H', 'K', 'L']] = op.transform_hkl(Fminus[['H', 'K', 'L']])
+            Fminus.set_index(['H', 'K', 'L'], inplace=True)
+            Fminus = Fminus.loc[Fplus.index]
+            phase = np.deg2rad(Fminus[phase_key])
+            phase -= 2.*np.pi*np.matmul(np.array(Fminus.reset_index()[['H', 'K', 'L']], dtype=float), (op.order + 1)*op.trans)
+            phase = ( phase + np.pi) % (2 * np.pi ) - np.pi
+            phase = np.rad2deg(phase)
+            Fminus[phase_key] = phase
+
+            DeltaF =  Fplus[sf_key] * np.exp(1j*np.deg2rad(Fplus[phase_key])) - \
+                     Fminus[sf_key] * np.exp(1j*np.deg2rad(Fminus[phase_key])) 
+
+            Fplus[sf_key] = np.abs(DeltaF)
+            Fplus[phase_key] = np.rad2deg(np.angle(DeltaF))
+            differences[k] = Fplus
+        return differences
+
 def _phihelper(X):
     cryst, kw, i = X
     f = cryst.reflections(**kw)
